@@ -1,0 +1,75 @@
+<template name="admin">
+    <main role="main" class="container">
+        {{#if isInRole 'admin'}} {{>adminstart}} {{else}} {{>notadmin}} {{/if}}
+    </main>
+</template>
+<template name="adminstart">
+
+    <div class="card bg-default">
+        <div class="card-header">
+            Asterisk Server Information
+        </div>
+        <div class="card-body">
+            <form action="/admin" method="POST">
+                <p>
+                    <div class="input-group mb-3">
+                        <div class="input-group-prepend">
+                            <span class="input-group-text" id="host-addon"><span class="fas fa-cloud"></span></span>
+                        </div>
+                        <input type="text" name="ami_host" class="form-control" value="{{ami.host}}" placeholder="Host" aria-label="Host" aria-describedby="host-addon">
+                    </div>
+
+                </p>
+                <p>
+                    <div class="input-group mb-3">
+                        <div class="input-group-prepend">
+                            <span class="input-group-text" id="port-addon"><span class="fas fa-cloud"></span></span>
+                        </div>
+                        <input type="text" name="ami_port" class="form-control" value="{{ami.port}}" placeholder="Port (default 5038)" aria-label="Port (default 5038)" aria-describedby="port-addon">
+                    </div>
+
+                </p>
+                <p>
+                    <div class="input-group mb-3">
+                        <div class="input-group-prepend">
+                            <span class="input-group-text" id="username-addon"><span class="fas fa-user"></span></span>
+                        </div>
+                        <input type="text" name="ami_user" class="form-control" value="{{ami.user}}" placeholder="Username" aria-label="Username" aria-describedby="username-addon">
+                    </div>
+
+                </p>
+                <p>
+                    <div class="input-group mb-3">
+                        <div class="input-group-prepend">
+                            <span class="input-group-text" id="username-addon"><span class="fas fa-lock"></span></span>
+                        </div>
+                        <input type="password" name="ami_pass" class="form-control" value="{{ami.pass}}" placeholder="Password" aria-label="Password" aria-describedby="password-addon">
+                    </div>
+
+                </p>
+                <p>
+                    <button type="submit" class="btn btn-primary btn-small">Save</button>
+                </p>
+            </form>
+            <div style="display:none;" id="error" class="card card-danger">
+                <div class="card-header">
+                    Error!
+                </div>
+                <div class="card-body" id="errors">
+                </div>
+            </div>
+        </div>
+
+    </div>
+</template>
+
+<template name="notadmin">
+    <div class="card card-danger">
+        <div class="card-header">
+            Access Denied
+        </div>
+        <div class="card-body">
+            You do not have access to this feature.
+        </div>
+    </div>
+</template>

@@ -1,0 +1,21 @@
+{
+  "name": "pbxmonitor",
+  "private": false,
+  "scripts": {
+    "lint": "./node_modules/.bin/eslint .",
+    "test": "meteor test --once --driver-package meteortesting:mocha",
+    "test-app": "TEST_WATCH=1 meteor test --full-app --driver-package meteortesting:mocha",
+    "visualize": "meteor --production --extra-packages bundle-visualizer"
+  },
+  "dependencies": {
+    "@babel/runtime": "^7.9.2",
+    "areacodes": "^0.2.1",
+    "asterisk-manager": "^0.1.16",
+    "bcrypt": "^3.0.8",
+    "csv-parse": "^4.8.8",
+    "libphonenumber-js": "^1.7.50",
+    "meteor-node-stubs": "^0.4.1",
+    "moment": "^2.24.0",
+    "toastr": "^2.1.4"
+  }
+}

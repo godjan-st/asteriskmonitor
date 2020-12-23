@@ -1,0 +1,303 @@
+<template name="ConferenceSingle">
+    <audio id="sound-join" src="/sounds/join-conference.wav" type="audio/wav"></audio>
+    <audio id="sound-leave" src="/sounds/leave-conference.wav" type="audio/wav"></audio>
+    <main role="main" class="container-fluid">
+        <div style="display:none;" id="error" class="card bg-danger">
+            <div class="card-header">
+                Error!
+            </div>
+            <div class="card-body" id="errors">
+            </div>
+        </div>
+        <div class="row">
+          <div class="col-12">
+
+          </div>
+          <div class="col"></div>
+        </div>
+        <div class="row">
+          <div class="col">
+            <div class="header-conference d-flex justify-content-between mt-3">
+              <h1>
+                <i class="fas fa-phone-square text-success" aria-hidden="true"></i>
+                <span class="d-none">Conference Room</span> {{conference}}
+              </h1>
+              <h3 class="text-right">
+                {{elapsedHMS starmon_timestamp end_timestamp}}
+              </h3>
+            </div>
+                <h4 class="pb-1">
+                  <span class="d-none d-sm-inline">Began {{prettyTime starmon_timestamp}}</span>
+                  <small class="d-inline d-sm-none">
+                    {{prettyDateShort starmon_timestamp}}
+                    {{prettyTimeShort starmon_timestamp}}
+                  </small>
+                </h4>
+                <div class="input-group mb-3">
+                    <div class="input-group-prepend">
+                        <span class="input-group-text" id="share-addon"><i class="fas fa-share-square" aria-hidden="true"></i></span>
+                    </div>
+                    <input type="text" readonly class="form-control" value="{{confShareUrl}}" id="permalink" aria-label="Permalink" aria-describedby="share-addon">
+                </div>
+                {{#if end_timestamp}}
+                  <div class="card bg-default">
+                    <div class="card-body">
+                      <h1>This conference has ended</h1>
+                      <p>Conference began on {{prettyTime starmon_timestamp}} and ended {{prettyTime end_timestamp}}.</p>
+                      <p>The conference was {{elapsedTime starmon_timestamp end_timestamp}} long.</p>
+                      <p>The top speaking caller was {{topCaller.calleridname}} <a href="{{getPhoneNumberURI topCaller.calleridnum}}">{{{phoneTypeIcon calleridnum}}} {{formatPhoneNumber topCaller.calleridnum}}</a></p>
+                      <p><strong>Total callers:</strong> {{total_member_count}}.</p>
+                    </div>
+                  </div>
+                {{else}}
+                <div class="card bg-default">
+                  <div class="card-body">
+                    <div class="custom-control custom-switch">
+                      <input type="checkbox" class="custom-control-input" id="switch-notification-sounds" checked>
+                      <label class="custom-control-label" for="switch-notification-sounds">Enable Join / Leave Notification Sounds</label>
+                    </div>
+                    <div class="custom-control custom-switch">
+                        <input type="checkbox" class="custom-control-input" id="switch-lock-conference">
+                        <label class="custom-control-label" for="switch-lock-conference">Lock Conference</label>
+                      </div>
+                  </div>
+                </div>
+                  <div class="card bg-default mt-3">
+                    <div class="card-header">
+                      Members
+                      <span class="badge badge-info float-right">{{active_member_count}} active members</span>
+                    </div>
+
+                      {{#if active_member_count}} {{#each active_members}}
+                      <div class="modal" tabindex="-1" role="dialog" id="member_{{_id}}">
+                        <div class="modal-dialog" role="document">
+                          <div class="modal-content">
+                            <div class="modal-header">
+                              <h5 class="modal-title">{{calleridname}} - <a href="{{getPhoneNumberURI calleridnum}}">{{formatPhoneNumber calleridnum}}</a></h5>
+                              <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                <span aria-hidden="true">&times;</span>
+                              </button>
+                            </div>
+                            <div class="modal-body">
+                              {{{amiblock this}}}
+                            </div>
+                            <div class="modal-footer">
+                              <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                      {{/each}}
+                      <div class="table-wrapper d-none d-sm-block">
+                      <div class="table-responsive">
+                        <table class="table table-sm table-hover">
+                          <thead>
+                            <tr>
+                              <th class="text-center">Status</th>
+                              <th>Name</th>
+                              <th>Number</th>
+                              <th>Last Spoke</th>
+                              <th>Time Speaking</th>
+                              <th>Joined</th>
+                              <th>Present</th>
+                              <th>Actions</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {{#each active_members}}
+                            <tr data-toggle="member_{{_id}}" class="talking_{{talking}}">
+                              <td class="text-center p-2">
+                                {{#if talking}}
+                                <i class="fas fa-phone-volume text-success"></i> {{else}}
+                                <i class="far fa-circle text-default"></i> {{/if}}
+                              </td>
+                              <td class="p-2">{{calleridname}}<br /><small>{{getPhoneNumberCityState calleridnum}}</small></td>
+                              <td class="p-2"><a class="btn btn-sm btn-secondary" href="{{getPhoneNumberURI calleridnum}}">{{{phoneTypeIcon calleridnum}}} {{formatPhoneNumber calleridnum}}</a></td>
+                              <td class="p-2">{{reactiveTime speak_timestamp}}</td>
+                              <td class="p-2">{{timeSpeaking}}</td>
+                              <td class="p-2">{{reactiveTime starmon_timestamp}}</td>
+                              <td class="p-2">{{elapsedHMS starmon_timestamp leave_timestamp}}</td>
+                              <td data-conference="{{conference}}" data-channel="{{channel}}" data-meetme="{{meetme}}" data-usernum="{{usernum}}">
+                                <a href="#" class="btn btn-sm btn-danger conf-kick-member">
+                                  <i class="fas fa-ban" aria-hidden="true"></i>
+                                  <span class="d-none d-xl-inline">Kick</span>
+                                </a>
+                                {{#if muted}}
+                                  <a href="#" class="btn btn-sm btn-warning conf-unmute-member">
+                                    <i class="fas fa-microphone-slash" aria-hidden="true"></i>
+                                    <span class="d-none d-xl-inline">Muted</span>
+                                  </a>
+                                {{else}}
+                                  <a href="#" class="btn btn-sm btn-secondary conf-mute-member">
+                                    <i class="fas fa-microphone" aria-hidden="true"></i>
+                                    <span class="d-none d-xl-inline">Mute</span>
+                                  </a>
+                                {{/if}}
+                                <a href="#" class="btn btn-sm btn-info" onmousedown="$('#member_{{_id}}').modal({show:true});">
+                                  <i class="fas fa-info-circle" aria-hidden="true"></i>
+                                  <span class="d-none d-xl-inline">Info</span>
+                                </a>
+                              </td>
+                            </tr>
+                            {{/each}}
+                          </tbody>
+                        </table>
+                      </div>
+                      </div>
+                      <div class="list-group list-group-flush d-block d-sm-none">
+                        {{#each active_members}}
+                          <div  class="list-group-item m-0 p-0 talking_{{talking}}">
+                            <div class="d-flex w-100 justify-content-between">
+                              <div class="w-100 p-3 pt-1">
+                                <div class="d-flex w-100 justify-content-between" >
+                                  <h5 class="mb-1">
+                                    {{calleridname}}
+                                    <button href="#" class="btn btn-link pt-0" onmousedown="$('#member_{{_id}}').modal({show:true});">
+                                      <i class="fas fa-info-circle" aria-hidden="true"></i>
+                                    </button>
+                                    <br /><small>{{getPhoneNumberCityState calleridnum}}</small>
+                                  </h5>
+                                  <h6>
+                                  {{elapsedHMS starmon_timestamp leave_timestamp}}
+                                  </h6>
+                                </div>
+                                <div class="w-100 pt-2 justify-content-between" >
+                                  <p class="my-0"><a href="{{getPhoneNumberURI calleridnum}}">{{{phoneTypeIcon calleridnum}}} {{formatPhoneNumber calleridnum}}</a></p>
+                                  <p class="my-0">Joined: {{reactiveTime starmon_timestamp}}</p>
+                                </div>
+                              </div>
+                              <div class="btn-group-vertical" role="group" data-conference="{{conference}}" data-channel="{{channel}}" data-meetme="{{meetme}}" data-usernum="{{usernum}}">
+                                <button href="#" class="btn btn-lg btn-danger conf-kick-member">
+                                  <i class="fas fa-ban" aria-hidden="true"></i>
+                                </button>
+                                {{#if muted}}
+                                    <button href="#" class="btn btn-lg btn-warning conf-unmute-member">
+                                      <i class="fas fa-microphone-slash" aria-hidden="true"></i>
+                                    </button>
+                                {{else}}
+                                  <button href="#" class="btn btn-lg btn-secondary conf-mute-member">
+                                    <i class="fas fa-microphone" aria-hidden="true"></i>
+                                  </button>
+                                {{/if}}
+                              </div>
+                            </div>
+                          </div>
+                        {{/each}}
+                      </div>
+                      {{else}}
+                      <div class="card-body">
+                        <p><strong>No active members in conference room.</strong></p>
+                      </div>
+                       {{/if}}
+                  </div>
+                  {{/if}}
+                  {{#if hangup_member_count}}
+                  <div class="card bg-default mt-3 ">
+                      <div class="card-header">
+                          Hangups
+                          <span class="badge badge-info float-right">{{hangup_member_count}} total</span>
+                      </div>
+                      <div class="table-wrapper d-none d-sm-block">
+                          {{#each hangup_members}}
+                          <div class="modal" tabindex="-1" role="dialog" id="member_{{_id}}">
+                              <div class="modal-dialog" role="document">
+                                  <div class="modal-content">
+                                      <div class="modal-header">
+                                          <h5 class="modal-title">{{calleridname}} - <a href="{{getPhoneNumberURI calleridnum}}">{{{phoneTypeIcon calleridnum}}} {{formatPhoneNumber calleridnum}}</a></h5>
+                                          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                              <span aria-hidden="true">&times;</span>
+                                          </button>
+                                      </div>
+                                      <div class="modal-body">
+                                          {{{amiblock this}}}
+                                      </div>
+                                      <div class="modal-footer">
+                                          <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                                      </div>
+                                  </div>
+                              </div>
+                          </div>
+                          {{/each}}
+                          <div class="table-responsive">
+                              <table class="table table-hover">
+                                  <thead>
+                                      <tr>
+                                          <th>Caller ID Name</th>
+                                          <th>Caller ID Number</th>
+                                          <th>Last Spoke</th>
+                                          <th>Time Speaking</th>
+                                          <th>Joined</th>
+                                          <th>Left</th>
+                                          <th>Present</th>
+                                          <th>Actions</th>
+                                      </tr>
+                                  </thead>
+                                  <tbody>
+                                      {{#each hangup_members}}
+                                      <tr>
+                                          <td>{{calleridname}}<br /><small>{{getPhoneNumberCityState calleridnum}}</small></td>
+                                          <td><a class="btn btn-sm btn-secondary" href="{{getPhoneNumberURI calleridnum}}">{{{phoneTypeIcon calleridnum}}} {{formatPhoneNumber calleridnum}}</a></td>
+                                          <td>{{reactiveTime speak_timestamp}}</td>
+                                          <td>{{hms talkTime}}</td>
+                                          <td>{{reactiveTime starmon_timestamp}}</td>
+                                          <td>{{reactiveTime leave_timestamp}}</td>
+                                          <td>{{elapsedHMS starmon_timestamp leave_timestamp}}</td>
+                                          <td><a class="btn btn-sm btn-primary" href="#" onmousedown="$('#member_{{_id}}').modal({show:true});">Info</a></td>
+                                      </tr>
+                                      {{/each}}
+                                  </tbody>
+                              </table>
+                          </div>
+                      </div>
+                      <div class="list-group list-group-flush d-block d-sm-none">
+                        {{#each hangup_members}}
+                          <div  class="list-group-item m-0 p-0 talking_{{talking}}">
+                            <div class="d-flex w-100 justify-content-between">
+                              <div class="w-100 p-3 pt-1">
+                                <div class="d-flex w-100 justify-content-between" >
+                                  <h5 class="mb-1">
+                                    {{calleridname}}
+                                    <button href="#" class="btn btn-link pt-0" onmousedown="$('#member_{{_id}}').modal({show:true});">
+                                      <i class="fas fa-info-circle" aria-hidden="true"></i>
+                                    </button>
+                                    <br /><small>{{getPhoneNumberCityState calleridnum}}</small>
+                                  </h5>
+                                  <h6>
+                                  {{elapsedHMS starmon_timestamp leave_timestamp}}
+                                  </h6>
+                                </div>
+                                <div class="w-100 pt-0 justify-content-between" >
+                                  <p class="my-0"><a href="{{getPhoneNumberURI calleridnum}}">{{{phoneTypeIcon calleridnum}}} {{formatPhoneNumber calleridnum}}</a></p>
+                                  <p class="my-0">Left: {{reactiveTime leave_timestamp}}</p>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        {{/each}}
+                      </div>
+                  </div>
+                  {{/if}}
+          </div>
+          <div class="col-12 col-xl-3">
+            <div class="card my-3">
+              <div class="card-header">
+                Events
+                </div>
+              <div class="list-group">
+                {{#each event}}
+                <div class="list-group-item list-group-item-action">
+                  <!-- <div class="border-bottom">
+                    <h6 class="mb-1">{{prettyDateShort starmon_timestamp}} {{prettyTimeShort starmon_timestamp}}</h6>
+                  </div> -->
+                  <div class="text-left mb-1">
+                    <small >{{prettyDateShort starmon_timestamp}} {{prettyTimeShort starmon_timestamp}}</small>
+                  </div>
+                  <p class="mb-0"><strong>{{message}}</strong></p>
+                </div>
+                {{/each}}
+              </div>
+            </div>
+          </div>
+        </div>
+    </main>
+</template>
