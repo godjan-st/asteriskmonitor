@@ -1,6 +1,6 @@
 <template name="admin">
     <main role="main" class="container">
-        {{#if isInRole 'admin'}} {{>adminstart}} {{else}} {{>notadmin}} {{/if}}
+        {{#if isUserAdmin currentUser.username }} {{>adminstart}} {{else}} {{>notadmin}} {{/if}}
     </main>
 </template>
 <template name="adminstart">
@@ -69,7 +69,7 @@
             Access Denied
         </div>
         <div class="card-body">
-            You do not have access to this feature.
+            You do not have access to this feature. {{#if isUserInRole currentUser._id 'admin'}} admin {{else}} not admin {{/if}}
         </div>
     </div>
 </template>

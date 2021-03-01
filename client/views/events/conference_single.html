@@ -20,14 +20,14 @@
             <div class="header-conference d-flex justify-content-between mt-3">
               <h1>
                 <i class="fas fa-phone-square text-success" aria-hidden="true"></i>
-                <span class="d-none">Conference Room</span> {{conference}}
+                <span class="d-none">Комната конференции</span> {{conference}}
               </h1>
               <h3 class="text-right">
                 {{elapsedHMS starmon_timestamp end_timestamp}}
               </h3>
             </div>
                 <h4 class="pb-1">
-                  <span class="d-none d-sm-inline">Began {{prettyTime starmon_timestamp}}</span>
+                  <span class="d-none d-sm-inline">Время начала {{prettyTime starmon_timestamp}}</span>
                   <small class="d-inline d-sm-none">
                     {{prettyDateShort starmon_timestamp}}
                     {{prettyTimeShort starmon_timestamp}}
@@ -42,11 +42,11 @@
                 {{#if end_timestamp}}
                   <div class="card bg-default">
                     <div class="card-body">
-                      <h1>This conference has ended</h1>
-                      <p>Conference began on {{prettyTime starmon_timestamp}} and ended {{prettyTime end_timestamp}}.</p>
-                      <p>The conference was {{elapsedTime starmon_timestamp end_timestamp}} long.</p>
-                      <p>The top speaking caller was {{topCaller.calleridname}} <a href="{{getPhoneNumberURI topCaller.calleridnum}}">{{{phoneTypeIcon calleridnum}}} {{formatPhoneNumber topCaller.calleridnum}}</a></p>
-                      <p><strong>Total callers:</strong> {{total_member_count}}.</p>
+                      <h1>Эта конференция завершена</h1>
+                      <p>Время начала {{prettyTime starmon_timestamp}}, время конца {{prettyTime end_timestamp}}.</p>
+                      <p>Длительность конференции {{elapsedTime starmon_timestamp end_timestamp}}.</p>
+                      <p>Топ-спикер {{topCaller.calleridname}} <a href="{{getPhoneNumberURI topCaller.calleridnum}}">{{{phoneTypeIcon calleridnum}}} {{formatPhoneNumber topCaller.calleridnum}}</a></p>
+                      <p><strong>Всего участников:</strong> {{total_member_count}}.</p>
                     </div>
                   </div>
                 {{else}}
@@ -54,18 +54,18 @@
                   <div class="card-body">
                     <div class="custom-control custom-switch">
                       <input type="checkbox" class="custom-control-input" id="switch-notification-sounds" checked>
-                      <label class="custom-control-label" for="switch-notification-sounds">Enable Join / Leave Notification Sounds</label>
+                      <label class="custom-control-label" for="switch-notification-sounds">Включить звуки</label>
                     </div>
                     <div class="custom-control custom-switch">
                         <input type="checkbox" class="custom-control-input" id="switch-lock-conference">
-                        <label class="custom-control-label" for="switch-lock-conference">Lock Conference</label>
+                        <label class="custom-control-label" for="switch-lock-conference">Заблокировать конференцию</label>
                       </div>
                   </div>
                 </div>
                   <div class="card bg-default mt-3">
                     <div class="card-header">
-                      Members
-                      <span class="badge badge-info float-right">{{active_member_count}} active members</span>
+                      Участники
+                      <span class="badge badge-info float-right">{{active_member_count}} активных участников</span>
                     </div>
 
                       {{#if active_member_count}} {{#each active_members}}
@@ -82,7 +82,7 @@
                               {{{amiblock this}}}
                             </div>
                             <div class="modal-footer">
-                              <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                              <button type="button" class="btn btn-secondary" data-dismiss="modal">Закрыть</button>
                             </div>
                           </div>
                         </div>
@@ -93,14 +93,14 @@
                         <table class="table table-sm table-hover">
                           <thead>
                             <tr>
-                              <th class="text-center">Status</th>
-                              <th>Name</th>
-                              <th>Number</th>
-                              <th>Last Spoke</th>
-                              <th>Time Speaking</th>
-                              <th>Joined</th>
-                              <th>Present</th>
-                              <th>Actions</th>
+                              <th class="text-center">Статус</th>
+                              <th>Имя</th>
+                              <th>Номер</th>
+                              <th>Когда говорил</th>
+                              <th>Говорил всего</th>
+                              <th>Вступил</th>
+                              <th>Время в комнате</th>
+                              <th>Действия</th>
                             </tr>
                           </thead>
                           <tbody>
@@ -120,23 +120,25 @@
                               <td data-conference="{{conference}}" data-channel="{{channel}}" data-meetme="{{meetme}}" data-usernum="{{usernum}}">
                                 <a href="#" class="btn btn-sm btn-danger conf-kick-member">
                                   <i class="fas fa-ban" aria-hidden="true"></i>
-                                  <span class="d-none d-xl-inline">Kick</span>
+                                  <span class="d-none d-xl-inline">Выгнать</span>
                                 </a>
                                 {{#if muted}}
                                   <a href="#" class="btn btn-sm btn-warning conf-unmute-member">
                                     <i class="fas fa-microphone-slash" aria-hidden="true"></i>
-                                    <span class="d-none d-xl-inline">Muted</span>
+                                    <span class="d-none d-xl-inline">Вкл. звук</span>
                                   </a>
                                 {{else}}
                                   <a href="#" class="btn btn-sm btn-secondary conf-mute-member">
                                     <i class="fas fa-microphone" aria-hidden="true"></i>
-                                    <span class="d-none d-xl-inline">Mute</span>
+                                    <span class="d-none d-xl-inline">Заглушить</span>
                                   </a>
                                 {{/if}}
+                                <!--
                                 <a href="#" class="btn btn-sm btn-info" onmousedown="$('#member_{{_id}}').modal({show:true});">
                                   <i class="fas fa-info-circle" aria-hidden="true"></i>
                                   <span class="d-none d-xl-inline">Info</span>
                                 </a>
+                                -->
                               </td>
                             </tr>
                             {{/each}}
@@ -186,7 +188,7 @@
                       </div>
                       {{else}}
                       <div class="card-body">
-                        <p><strong>No active members in conference room.</strong></p>
+                        <p><strong>В этой комнате нет активных участников.</strong></p>
                       </div>
                        {{/if}}
                   </div>
@@ -194,7 +196,7 @@
                   {{#if hangup_member_count}}
                   <div class="card bg-default mt-3 ">
                       <div class="card-header">
-                          Hangups
+                          Были в комнате
                           <span class="badge badge-info float-right">{{hangup_member_count}} total</span>
                       </div>
                       <div class="table-wrapper d-none d-sm-block">
@@ -222,14 +224,16 @@
                               <table class="table table-hover">
                                   <thead>
                                       <tr>
-                                          <th>Caller ID Name</th>
-                                          <th>Caller ID Number</th>
-                                          <th>Last Spoke</th>
-                                          <th>Time Speaking</th>
-                                          <th>Joined</th>
-                                          <th>Left</th>
-                                          <th>Present</th>
-                                          <th>Actions</th>
+                                          <th>Имя</th>
+                                          <th>Номер</th>
+                                          <th>Когда говорил</th>
+                                          <th>Всего говорил</th>
+                                          <th>Вступил</th>
+                                          <th>Вышел</th>
+                                          <th>Был в комнате</th>
+                                          <!--
+                                          <th>Действия</th>
+                                          -->
                                       </tr>
                                   </thead>
                                   <tbody>
@@ -242,7 +246,9 @@
                                           <td>{{reactiveTime starmon_timestamp}}</td>
                                           <td>{{reactiveTime leave_timestamp}}</td>
                                           <td>{{elapsedHMS starmon_timestamp leave_timestamp}}</td>
+                                          <!--
                                           <td><a class="btn btn-sm btn-primary" href="#" onmousedown="$('#member_{{_id}}').modal({show:true});">Info</a></td>
+                                          -->
                                       </tr>
                                       {{/each}}
                                   </tbody>
@@ -281,7 +287,7 @@
           <div class="col-12 col-xl-3">
             <div class="card my-3">
               <div class="card-header">
-                Events
+                События
                 </div>
               <div class="list-group">
                 {{#each event}}

@@ -15,7 +15,7 @@
 
     <div class="card bg-default my-3">
       <div class="card-header">
-        Active Conferences
+        Активные конференции
         <span class="badge badge-info float-right">{{active_conf_count}}</span>
       </div>
       {{#if active_conf_count}}
@@ -24,10 +24,10 @@
           <table class="table table-hover">
             <thead>
               <tr>
-                <th width="100px">Options</th>
-                <th>Conference</th>
-                <th>Members</th>
-                <th>Started</th>
+                <th width="100px">Действия</th>
+                <th>Номер комнаты</th>
+                <th>Участников</th>
+                <th>Начало</th>
               </tr>
             </thead>
             <tbody>
@@ -60,13 +60,13 @@
       </div>
       {{else}}
       <div class="card-body">
-        <p><strong>No Active Conferences</strong></p>
+        <p><strong>Нет активных конференций</strong></p>
       </div>
       {{/if}}
     </div>
     <div class="card bg-default my-3">
       <div class="card-header">
-        Completed Conferences
+        Завершенные конференции
         <span class="badge badge-dark float-right">{{completed_conf_count}}</span>
       </div>
 
@@ -76,11 +76,11 @@
           <table class="table table-hover">
             <thead>
               <tr>
-                <th width="100px">Options</th>
-                <th>Conference</th>
-                <th>Started</th>
-                <th>Ended</th>
-                <th>Total Time</th>
+                <th width="100px">Действия</th>
+                <th>Номер комнаты</th>
+                <th>Начало</th>
+                <th>Конец</th>
+                <th>Длительность</th>
               </tr>
             </thead>
             <tbody>
@@ -111,11 +111,11 @@
         {{/each}}
       </div>
       <div class="card-footer">
-          <small>Showing only <strong>100</strong> of the latest conferences</small>
+          <small>Показывается только <strong>100</strong> последних конференций</small>
       </div>
       {{else}}
       <div class="card-body">
-        <p><strong>No Completed Conferences</strong></p>
+        <p><strong>Нет завершенных конференций</strong></p>
       </div>
       {{/if}}
     </div>

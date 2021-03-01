@@ -4,14 +4,14 @@
             <div class="col-xl-6 col-lg-7 col-md-9 col-sm-12 pull-center mx-auto">
                 <div class="card mb-3">
                     <div class="card-body">
-                        <h5 class="card-title">Welcome to <span class="fas fa-asterisk"></span>monitor!</h5>
-                        <p class="card-text">To get started, please login.</p>
+                        <h5 class="card-title">Добро пожаловать в <span class="fas fa-asterisk"></span>монитор!</h5>
+                        <p class="card-text">Чтобы начать, пожалуйста авторизуйтесь.</p>
                     </div>
                 </div>
                 {{#if setupComplete}}
                 {{>atForm}}
                 {{else}}
-                <p>You need to <a href="{{pathFor 'setup'}}">setup</a> <span class="fas fa-asterisk"></span>monitor before you can continue.</p>
+                <p>Вам нужно <a href="{{pathFor 'setup'}}">настроить</a> <span class="fas fa-asterisk"></span>монитор перед тем как продолжить.</p>
                 {{/if}}
             </div>
         </div>

@@ -2,6 +2,7 @@
   <footer class="footer bg-dark">
     <div class="container-fluid">
       <div class="d-flex w-100 justify-content-between">
+        <!--
         <span class="text-muted">
           <span class="fas fa-asterisk mr-1"></span> monitor -
           <span class="d-none d-lg-inline">Realtime Asterisk Web Monitor</span> &copy; {{currentYear}}
@@ -16,11 +17,12 @@
             </a>
           </span>
         </span>
+        -->
         {{#if currentUser}}
-          {{#if isInRole 'admin'}}
+          {{#if isUserAdmin currentUser.username}}
           <div>
             <a class="btn btn btn-primary" href="/admin">
-              Admin<span class="d-none d-lg-inline">istration Panel</span>
+              <span class="d-none d-lg-inline">Панель администратора</span>
             </a>
           </div>
           {{/if}}

@@ -156,8 +156,8 @@ Meteor.startup(function () {
         }
         console.log(user.admin)
         console.log(user.roles)
-        console.log((user.roles.indexOf('admin') > -1))
-        if (user.roles.indexOf('admin') > -1) {
+        //console.log((user.roles.indexOf('admin') > -1))
+        if (user.roles != null && user.roles.indexOf('admin') > -1) {
             // Make sure old asterisk monitor admins get the new roles
             console.log(Roles.userIsInRole(user._id, 'admin', GlobalSettings.LoginRestrictions.Domain))
             if (!Roles.userIsInRole(user._id, 'admin', GlobalSettings.LoginRestrictions.Domain)) {
@@ -166,6 +166,7 @@ Meteor.startup(function () {
             }
         }
     });
+
 
     FastRender.onAllRoutes(function () {
         this.subscribe('AmiStatus');
@@ -730,7 +731,7 @@ Meteor.startup(function () {
             const member = ConferenceMembers.findOne({
                 'bridgeuniqueid': bridgeuniqueid,
                 'usernum': user_id,
-                'meetme': bridge
+                //'meetme': bridge
             });
             if (amiserver) {
                 if (amiserver.port && amiserver.host && amiserver.user && amiserver.pass) {
@@ -766,6 +767,7 @@ Meteor.startup(function () {
             if (!Meteor.userId()) {
                 throw new Meteor.Error("not-authorized");
             }
+            bridge = parseInt(bridge)
             check(bridge, Number);
             check(channel, String);
 
@@ -791,8 +793,8 @@ Meteor.startup(function () {
                         }
                         ConferenceMembers.update({
                             'bridgeuniqueid': bridgeuniqueid,
-                            'usernum': user_id,
-                            'meetme': bridge
+                            'channel': channel,
+                            //'meetme': bridge
                         }, {
                             $set: {
                                 'muted': true
@@ -809,6 +811,8 @@ Meteor.startup(function () {
             if (!Meteor.userId()) {
                 throw new Meteor.Error("not-authorized");
             }
+            console.log(bridge)
+            bridge = parseInt(bridge)
             check(bridge, Number);
             check(channel, String);
 
@@ -834,8 +838,8 @@ Meteor.startup(function () {
                         }
                         ConferenceMembers.update({
                             'bridgeuniqueid': bridgeuniqueid,
-                            'usernum': user_id,
-                            'meetme': bridge
+                            'channel': channel,
+                            //'meetme': bridge
                         }, {
                             $set: {
                                 'muted': false
@@ -855,6 +859,12 @@ Meteor.startup(function () {
             var amiserver = ServerSettings.find({
                 'module': 'ami'
             }).fetch()[0];
+    
+            const member = ConferenceMembers.findOne({
+                'bridgeuniqueid': bridgeuniqueid,
+                "channel": channel
+                //'meetme': bridge
+            });
 
             if (amiserver) {
                 if (amiserver.port && amiserver.host && amiserver.user && amiserver.pass) {
@@ -864,15 +874,32 @@ Meteor.startup(function () {
                         amiserver.user,
                         amiserver.pass,
                         true);
-
                     ami.action({
                         'action': 'confbridgekick',
                         'conference': bridge,
                         'channel': channel,
                     }, Meteor.bindEnvironment(function (err, res) {
-                        if (err) {
+                        if (err && err.message != 'No active conferences.') {
+                            try{
+                                console.log(err)
+                            } catch (e) {}
+                            
                             throw new Meteor.Error('conf-kick-error', err);
                         }
+                        ConferenceEvents.insert({
+                            'message': `${member.calleridname} ${member.calleridnum} has been kicked from the conference.`,
+                            'event': 'kick',
+                            'starmon_timestamp': Date.now(),
+                            'bridgeuniqueid': bridgeuniqueid
+                        });
+                        // Насколько понимаю это - закрытие конференции
+                        //Conferences.update({
+                        //    'bridgeuniqueid': bridgeuniqueid
+                        //}, {
+                        //    $set: {
+                        //        end_timestamp: new Date()
+                        //    }
+                        //});
                         return res;
                     }));
                 }
@@ -982,6 +1009,7 @@ function StartAMI() {
 
             //AmiLog._ensureIndex( { 'starmon_timestamp': 1 }, { expireAfterSeconds: 60 } );
             ami.on('managerevent', Meteor.bindEnvironment(function (evt) {
+                console.log('managerevent', evt)
                 evt.starmon_timestamp = Date.now();
                 if (evt.event == 'MeetmeTalking' || evt.event == 'ConfbridgeTalking' || evt.event == 'RTCPSent' || evt.event == 'RTCPReceived' || evt.event == 'VarSet') {
                     return;
@@ -994,18 +1022,21 @@ function StartAMI() {
             // Queue Hooks
             //
             ami.on('join', Meteor.bindEnvironment(function (evt) {
+                console.log('join', evt)
                 evt.starmon_timestamp = Date.now();
                 evt.calleridname = CIDLookup(evt.calleridname, evt.calleridnum);
                 Queue.insert(evt);
             }));
 
             ami.on('leave', Meteor.bindEnvironment(function (evt) {
+                console.log('leave', evt)
                 Queue.remove({
                     uniqueid: evt.uniqueid
                 });
             }));
 
             ami.on('confbridgetalking', Meteor.bindEnvironment(function (evt) {
+                console.log('confbridgetalking', evt)
                 let talking = false;
                 let talkTime = 0;
                 if (evt.talkingstatus == 'on') {
@@ -1036,8 +1067,15 @@ function StartAMI() {
             }));
 
             ami.on('confbridgejoin', Meteor.bindEnvironment(function (evt) {
+                console.log('confbridgejoin', evt)
                 evt.starmon_timestamp = Date.now();
                 evt.calleridname = CIDLookup(evt.calleridname, evt.calleridnum);
+                var muted = evt.muted
+                if (muted == 'No'){
+                    evt.muted = false
+                } else {
+                    evt.muted = true
+                }
                 // Update Conference Users Count
                 Conferences.update({
                     'bridgeuniqueid': evt.bridgeuniqueid
@@ -1064,6 +1102,7 @@ function StartAMI() {
             }));
 
             ami.on('confbridgeleave', Meteor.bindEnvironment(function (evt) {
+                console.log('confbridgeleave', evt)
                 evt.starmon_timestamp = Date.now();
                 evt.calleridname = CIDLookup(evt.calleridname, evt.calleridnum);
                 // Update Conference Users Count
@@ -1099,6 +1138,7 @@ function StartAMI() {
             }));
 
             ami.on('confbridgeend', Meteor.bindEnvironment(function (evt) {
+                console.log('confbridgeend', evt)
                 Conferences.update({
                     'bridgeuniqueid': evt.bridgeuniqueid
                 }, {
@@ -1115,6 +1155,7 @@ function StartAMI() {
             }));
 
             ami.on('confbridgestart', Meteor.bindEnvironment(function (evt) {
+                console.log('confbridgestart', evt)
                 evt.starmon_timestamp = Date.now();
 
                 evt.memberTotal = 0;
@@ -1131,6 +1172,15 @@ function StartAMI() {
             // Conferencing Hooks
             //
             ami.on('meetmejoin', Meteor.bindEnvironment(function (evt) {
+                console.log('meetmejoin', evt)
+                try {
+                    var muted = evt.muted
+                    if (muted == 'No'){
+                        evt.muted = false
+                    } else {
+                        evt.muted = true
+                    }
+                } catch(e) {}
                 evt.starmon_timestamp = Date.now();
                 evt.calleridname = CIDLookup(evt.calleridname, evt.calleridnum);
                 // Check if this meet me has started yet.. 
@@ -1180,6 +1230,8 @@ function StartAMI() {
             }));
 
             ami.on('meetmetalking', Meteor.bindEnvironment(function (evt) {
+                console.log('meetmetalking', evt)
+
                 let talking = false;
                 let talkTime = 0;
                 if (evt.status == 'on') {
@@ -1212,6 +1264,7 @@ function StartAMI() {
             }));
 
             ami.on('meetmeleave', Meteor.bindEnvironment(function (evt) {
+                console.log('meetmeleave', evt)
                 evt.starmon_timestamp = Date.now();
                 evt.calleridname = CIDLookup(evt.calleridname, evt.calleridnum);
 
@@ -1256,6 +1309,7 @@ function StartAMI() {
             }));
 
             ami.on('meetmeend', Meteor.bindEnvironment(function (evt) {
+                console.log('meetmeend', evt)
                 const conf = Conferences.findOne({
                     'conference': evt.meetme,
                     end_timestamp: {
@@ -1286,6 +1340,7 @@ function StartAMI() {
             // TODO: Detect when AMI goes away
             //
             ami.on('fullybooted', Meteor.bindEnvironment(function (evt) {
+                console.log('fullybooted', evt)
                 evt.starmon_timestamp = Date.now();
                 if (AmiStatus.find().count() > 0) {
                     AmiStatus.update({}, evt);

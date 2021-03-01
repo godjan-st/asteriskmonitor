@@ -13,20 +13,21 @@
         <ul class="navbar-nav ml-auto">
           {{#if firstrun}}
             <li class="nav-item active">
-              <a class="nav-link" href="{{pathFor 'setup'}}">Setup</a>
+              <a class="nav-link" href="{{pathFor 'setup'}}">Настройка</a>
             </li>
           {{else}}
             {{#if notloggedin}}
               <li class="nav-item {{active 'login'}}">
-                <a class="nav-link" href="{{pathFor 'login'}}">Please Login</a>
+                <a class="nav-link" href="{{pathFor 'login'}}">Пожалуйста авторизуйтесь</a>
               </li>
             {{else}}
               <li class="nav-item {{active 'home'}}">
-                <a class="nav-link" href="{{pathFor 'home'}}">Home</a>
+                <a class="nav-link" href="{{pathFor 'home'}}">Главная</a>
               </li>
               <li class="nav-item {{active 'conferences'}}">
-                <a class="nav-link" href="{{pathFor 'conferences'}}">Conferences</a>
+                <a class="nav-link" href="{{pathFor 'conferences'}}">Конференции</a>
               </li>
+              <!--
               <li class="nav-item {{active 'directory'}}">
                     <a class="nav-link" href="{{pathFor 'directory'}}">Directory</a>
                   </li>
@@ -36,12 +37,12 @@
                   <a class="dropdown-item" href="{{pathFor 'calls'}}">Calls</a>
                   <a class="dropdown-item" href="{{pathFor 'amilog'}}">All Events</a>
                   <a class="dropdown-item" href="{{pathFor 'queue'}}">Call Queue</a>
-                  <!--<div class="dropdown-divider"></div>-->
                 </div>
               </li>
               <li class="nav-item {{active 'active'}}">
                 <a class="nav-link" href="{{pathFor 'about'}}">About</a>
               </li>
+              -->
             {{/if}}
           {{/if}}
           {{#if currentUser}}
@@ -53,6 +54,9 @@
                   {{currentUser.emails.[0].address}}
                 {{/if}}
               </a>
+            </li>
+            <li>
+              <a href="#" class="btn btn-link text-light my-2 my-sm-0" id='logout'>Выход</a>
             </li>
           {{/if}}
         </ul>

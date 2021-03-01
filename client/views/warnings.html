@@ -1,5 +1,5 @@
 <template name="warnings">
-    {{#if isInRole 'admin'}}
+    {{#if isUserAdmin currentUser.username}}
         {{#unless ami_connected}}
         <div class="card bg-danger">
             <div class="card-header">

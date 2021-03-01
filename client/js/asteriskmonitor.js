@@ -55,6 +55,18 @@ Template.registerHelper('hms', function (time = Date.now()) {
         .seconds(time)
         .format('H:mm:ss');
 });
+
+Template.registerHelper('isUserInRole', function(userId, role) {
+    return Roles.userIsInRole(userId, role, 'domru.ru');
+  });
+
+Template.registerHelper('isUserAdmin', function(username) {
+    if (username == 'admin') {
+        return true
+    }
+    return Roles.userIsInRole(userId, 'admin', 'domru.ru');
+});
+
 Handlebars.registerHelper('moment', function (time) {
     if (typeof time === 'undefined') {
         time = this.starmon_timestamp;

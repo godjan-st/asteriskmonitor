@@ -1,27 +1,27 @@
 <template name="editprofile">
     <main role="main" class="container">
-        <h1>Hello, {{#if currentUser.profile.name}}{{currentUser.profile.name}}{{else}}{{currentUser.emails.[0].address}}{{/if}}.</h1>
+        <h1>Здравствуйте, {{#if currentUser.profile.name}}{{currentUser.profile.name}}{{else}}{{currentUser.emails.[0].address}}{{/if}}.</h1>
         <hr />{{#unless currentUser.profile.name}}
 
         <div class="card bg-warning">
             <div class="card-header">
-                No Full Name associated with this account
+                Не введено полное имя
             </div>
             <div class="card-body">
-                Please make sure you have filled out your profile information fully. </div>
+                Пожалуйста убедитесь, что вы заполнили свой профиль. </div>
         </div>
         {{/unless}} {{#unless currentUser.username}}
         <div class="card bg-warning">
             <div class="card-header">
-                No username associated with this account
+                Не введено имя пользователя
             </div>
             <div class="card-body">
-                Please make sure you have filled out your profile information fully. </div>
+                Пожалуйста убедитесь, что вы заполнили свой профиль. </div>
         </div>
         {{/unless}}
         <div class="card bg-default">
             <div class="card-header">
-                Edit Profile
+                Настройка профиля
             </div>
             <div class="card-body">
                 <div class="row">
@@ -55,10 +55,10 @@
                                 </div>
                             </p>
                             <p>
-                                <small>You can change your avatar at <a href="https://gravatar.com/" target="_blank">gravatar.com</a></small>
+                                <small>Вы можете поменять свой аватар на <a href="https://gravatar.com/" target="_blank">gravatar.com</a></small>
                             </p>
                             <p>
-                                <button type="submit" class="btn btn-primary btn-small float-right">Save</button>
+                                <button type="submit" class="btn btn-primary btn-small float-right">Сохранить</button>
                             </p>
                         </form>
                     </div>

@@ -7,6 +7,12 @@ Template.adminstart.helpers({
     }
 });
 
+Template.registerHelper('isUserInRole', function(userId, role) {
+    console.log(Roles.userIsInRole(userId, role, 'domru.ru'))
+    console.log(Roles.userIsInRole(userId, role))
+    return Roles.userIsInRole(userId, role, 'domru.ru');
+  });
+
 Template.adminstart.events = {
     'submit form': function (e) {
         e.preventDefault();
