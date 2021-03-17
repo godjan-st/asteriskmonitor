@@ -2,7 +2,7 @@
   <div id="login-buttons" class="btns-login">
     {{#if currentUser}}
       {{#if loggingInOrOut}}
-        {{! We aren't actually logged in/out yet; we're just setting Meteor.userId
+        {{! We aren't actually logged in/out yet; we're just setting Meteor.
             optimistically during an at-startup login-with-token. We expose this
             state so other UIs can treat it specially, but we'll just treat it
             as logged out. }}

@@ -2,7 +2,14 @@ const toastr = require('toastr');
 const moment = require('moment');
 Template.ConferenceSingle.helpers({
   event: function () {
-    return ConferenceEvents.find({}, {
+    if (Meteor.user().username == 'admin') {
+      return ConferenceEvents.find({}, {
+        sort: {
+          starmon_timestamp: -1
+        }
+      });
+    }
+    return ConferenceEvents.find({ 'user_id': Meteor.userId() }, {
       sort: {
         starmon_timestamp: -1
       }
@@ -240,6 +247,7 @@ Template.ConferenceSingle.onRendered(function () {
     activeConfObserver = null;
   }
   const confEvents = ConferenceEvents.find({
+    'user_id': Meteor.userId(),
     starmon_timestamp: {
       $gt: TimeSync.serverTime() || Date.now()
     }

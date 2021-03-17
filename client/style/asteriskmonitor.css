@@ -169,3 +169,41 @@ code {
 .list-group-item {
     padding: 0.5rem 1.2rem;
 }
+
+/* Ошибка, результат */
+
+.register-result {
+    font-size: 14pt;
+    color:#888888;
+    padding: 12px 20px;
+    margin: 3% 0;
+    border: 1px solid #999600;
+    border-radius: 5px;
+    background-color: rgb(248, 241, 178);
+    text-align: center;
+	transition: 1s;
+	margin: auto;
+    bottom: 100px;
+    max-width: 60%;
+    z-index: 10;
+}
+
+.register-result:empty { display: none; }
+
+.register-error {
+    z-index: 10;
+    font-size: 14pt;
+    color:#888888;
+    padding: 12px 20px;
+    margin: 3% 0;
+    border: 1px solid #973c3c;
+    border-radius: 5px;
+    background-color: rgb(248, 195, 195);
+    text-align: center;
+	transition: 1s;
+	margin: auto;
+    bottom: 100px;
+    max-width: 60%;
+}
+
+.register-error:empty { display: none; }

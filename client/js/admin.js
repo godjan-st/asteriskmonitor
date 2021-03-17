@@ -14,7 +14,7 @@ Template.registerHelper('isUserInRole', function(userId, role) {
   });
 
 Template.adminstart.events = {
-    'submit form': function (e) {
+    'submit form.admin-form': function (e) {
         e.preventDefault();
 
         let valid = true;
