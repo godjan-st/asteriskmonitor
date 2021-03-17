@@ -87,7 +87,12 @@ Handlebars.registerHelper('currentYear', function () {
 
 // TODO: Make i18n....
 Handlebars.registerHelper('getPhoneNumberCityState', function (phone) {
-    const phoneNumber = libphonenumber.parsePhoneNumberFromString(phone, "US");
+    try {
+        var phoneNumber = libphonenumber.parsePhoneNumberFromString(phone, "US");
+    } catch (e) {
+        var phoneNumber = phone
+    }
+    
     if (phoneNumber && phoneNumber.isValid()) {
         phone = phone.replace(/^\+?[10]/, '').replace(/[^0-9]/g, '').match(/^([0-9]{3})/);
         if (!phone) {
@@ -114,7 +119,11 @@ Handlebars.registerHelper('formatPhoneNumber', function (phone) {
 });
 
 Handlebars.registerHelper('getPhoneNumberURI', function (phone) {
-    const phoneNumber = libphonenumber.parsePhoneNumberFromString(phone, "US");
+    try {
+        var phoneNumber = libphonenumber.parsePhoneNumberFromString(phone, "US");
+    } catch (e) {
+        var phoneNumber = phone
+    }
     if (phoneNumber && phoneNumber.isValid()) {
         return libphonenumber.parsePhoneNumberFromString(phone, "US").getURI();
     } else {
@@ -123,7 +132,11 @@ Handlebars.registerHelper('getPhoneNumberURI', function (phone) {
 });
 
 Handlebars.registerHelper('phoneTypeIcon', function (phone) {
-    const phoneNumber = libphonenumber.parsePhoneNumberFromString(phone, "US");
+    try {
+        var phoneNumber = libphonenumber.parsePhoneNumberFromString(phone, "US");
+    } catch (e) {
+        var phoneNumber = phone
+    }
     if (phoneNumber && phoneNumber.isValid()) {
         switch (phoneNumber.getType()) {
             case "MOBILE":

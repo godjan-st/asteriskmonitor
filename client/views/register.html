@@ -1,0 +1,86 @@
+<template name="register">
+    <main role="main" class="container">
+        {{#if isUserAdmin currentUser.username }} {{>registerstart}} {{else}} {{>notadmin}} {{/if}}
+    </main>
+</template>
+<template name="registerstart">
+
+    <div class="card bg-default">
+        <div class="card-header">
+            Регистрация нового пользователя
+        </div>
+        <div class="card-body">
+            <form class='.register-form' action="/register" method="POST">
+                <p>
+                    <div class="input-group mb-3">
+                        <div class="input-group-prepend">
+                            <span class="input-group-text" id="email-addon"><span class="fas fa-envelope"></span></span>
+                        </div>
+                        <input type="text" name="email" class="form-control" id="email" placeholder="Email" aria-label="Email" aria-describedby="email-addon">
+                    </div>
+                </p>
+                <p>
+                    <div class="input-group mb-3">
+                        <div class="input-group-prepend">
+                            <span class="input-group-text" id="fullname-addon"><span class="fas fa-user"></span></span>
+                        </div>
+                        <input type="text" class="form-control" name="fullname" placeholder="Full Name" aria-label="Full Name" aria-describedby="fullname-addon">
+                    </div>
+                </p>
+                <p>
+                    <div class="input-group mb-3">
+                        <div class="input-group-prepend">
+                            <span class="input-group-text" id="username-addon"><span class="fas fa-user-secret"></span></span>
+                        </div>
+                        <input type="text" name="username" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="username-addon">
+                    </div>
+                </p>
+                <p>
+                    <div class="input-group mb-3">
+                        <div class="input-group-prepend">
+                            <span class="input-group-text" id="password-addon"><span class="fas fa-user-secret"></span></span>
+                        </div>
+                        <input type="password" name="password" class="form-control" placeholder="Password" aria-label="Password" aria-describedby="passsword-addon">
+                    </div>
+                </p>
+                <p>
+                    <div class="input-group mb-3">
+                        <div class="input-group-prepend">
+                            <span class="input-group-text" id="repeat-password-addon"><span class="fas fa-user-secret"></span></span>
+                        </div>
+                        <input type="password" name="repeatpassword" class="form-control" placeholder="Repeat password" aria-label="Repeat password" aria-describedby="repeat-password-addon">
+                    </div>
+                </p>
+                <p>
+                    <div class="input-group mb-3">
+                        <div class="input-group-prepend">
+                            <span class="input-group-text" id="domain-addon"><span class="fas fa-asterisk"></span></span>
+                        </div>
+                        <input type="text" name="domain" class="form-control" placeholder="Domain" aria-label="Domain" aria-describedby="domain-addon">
+                    </div>
+                </p>
+                <p>
+                    <div class="input-group mb-3">
+                        <div class="input-group-prepend">
+                            <span class="input-group-text" id="usernum-addon"><span class="fas fa-asterisk"></span></span>
+                        </div>
+                        <input type="text" name="usernum" class="form-control" placeholder="Usernum" aria-label="Usernum" aria-describedby="usernum-addon">
+                    </div>
+                </p>
+                <p>
+                    <button type="submit" class="btn btn-primary btn-small float-right">Сохранить</button>
+                </p>
+                <div class="register-error"></div>
+                <div class="register-result"></div>
+            </form>
+            <div style="display:none;" id="error" class="card card-danger">
+                <div class="card-header">
+                    Error!
+                </div>
+                <div class="card-body" id="errors">
+                </div>
+            </div>
+        </div>
+
+    </div>
+</template>

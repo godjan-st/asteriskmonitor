@@ -37,7 +37,7 @@
                                 <input type="text" disabled class="form-control" value="{{currentUser.emails.[0].address}}" id="email" placeholder="Email" aria-label="Email" aria-describedby="email-addon">
                             </div>
                         </p>
-                        <form action="/" method="POST">
+                        <form class='.editprofile-form' action="/" method="POST">
                             <p>
                                 <div class="input-group mb-3">
                                     <div class="input-group-prepend">
@@ -54,6 +54,16 @@
                                     <input type="text" name="username" class="form-control" value="{{currentUser.username}}" placeholder="Username" aria-label="Username" aria-describedby="username-addon">
                                 </div>
                             </p>
+                            <!--
+                            <p>
+                                <div class="input-group mb-3">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text" id="domain-addon"><span class="fas fa-asterisk"></span></span>
+                                    </div>
+                                    <input type="text" name="domain" class="form-control" value="{{currentUser.profile.domain}}" placeholder="Domain" aria-label="Domain" aria-describedby="domain-addon">
+                                </div>
+                            </p>
+                            -->
                             <p>
                                 <small>Вы можете поменять свой аватар на <a href="https://gravatar.com/" target="_blank">gravatar.com</a></small>
                             </p>

@@ -2,6 +2,9 @@ import asterisk from 'asterisk-manager';
 import { libphonenumber } from 'libphonenumber-js';
 import { FastRender } from 'meteor/staringatlights:fast-render';
 import { Roles } from 'meteor/alanning:roles';
+import bodyParser from "body-parser"
+import { WebApp } from "meteor/webapp"
+import { Cookies } from 'meteor/ostrio:cookies';
 
 //Temp Cleanup
 //ConferenceEvents.update({'event': 'begin'}, {$set: {'message': 'Conference has begun.'}},{multi: true});
@@ -12,6 +15,53 @@ TODO: Make the mute, unmute, kick, etc commands generic instead of having separa
 for meetme / confbridge. Also need to make a generic function for running AMI commands instead of
 checking the settings and connecting for every individual meteor method.
 */
+
+var cookies = new Cookies();
+
+WebApp.connectHandlers.use(bodyParser.urlencoded({ extended: true }))
+
+WebApp.connectHandlers.use((req, res, next) => {
+    cookies = req.Cookies;
+    console.log(req.method)
+    console.log(req.url)
+    if (req.url === '/register' && req.method === 'POST') {
+      console.log(req.body);
+      const username = req.body.username
+      const email = req.body.email
+      const password = req.body.password
+      const repeatpassword = req.body.repeatpassword
+      const domain = req.body.domain
+      const fullname = req.body.fullname
+      const exten = req.body.usernum
+      if (password != repeatpassword){
+        console.log("Пароли отличаются")
+        cookies.set("error", "Пароли отличаются")
+        res.writeHead(301, {
+          Location: req.url,
+        });
+        res.end()
+        return
+      }
+      try {
+        Accounts.createUser({'username': username, 'password': password, 'email': email, 'profile': { 'fullname': fullname, 'domain': domain, 'exten': exten }})
+      } catch(e) {
+          console.log(e)
+          cookies.set("error", e)
+          res.writeHead(301, {
+            Location: req.url,
+          });
+          res.end()
+          return
+      }
+      cookies.set("result", "Пользователь создан успешно")
+      res.writeHead(301, {
+        Location: req.url,
+      });
+      res.end()
+    } else {
+      next();
+    }
+  });
 
 Meteor.startup(() => {
     WebApp.rawConnectHandlers.use(
@@ -59,7 +109,7 @@ Meteor.startup(() => {
 			</div>`;
             next();
         })
-    );
+    )
 });
 
 const allowedFields = ['profile', 'username'];
@@ -109,12 +159,24 @@ Meteor.publish('UserCount', function () {
 });
 
 Meteor.publish('ActiveConferencesCount', function () {
+    console.log('ActiveConferencesCount method')
     if (this.userId) {
-        Counts.publish(this, 'active-conferences-count', Conferences.find({
-            end_timestamp: {
-                $exists: false
-            }
-        }));
+        var user = Meteor.users.findOne({ '_id': this.userId })
+        if ((user.roles != null && 'admin' in user.roles) || user.username == 'admin') {
+            Counts.publish(this, 'active-conferences-count', Conferences.find({
+                'user_id': {$ne:null},
+                end_timestamp: {
+                    $exists: false
+                }
+            }));
+        } else {
+            Counts.publish(this, 'active-conferences-count', Conferences.find({
+                'user_id': this.userId,
+                end_timestamp: {
+                    $exists: false
+                }
+            }));
+        }
     } else {
         this.ready();
     }
@@ -122,11 +184,22 @@ Meteor.publish('ActiveConferencesCount', function () {
 
 Meteor.publish('CompleteConferencesCount', function () {
     if (this.userId) {
-        Counts.publish(this, 'complete-conferences-count', Conferences.find({
-            end_timestamp: {
-                $exists: true
-            }
-        }));
+        var user = Meteor.users.findOne({ '_id': this.userId })
+        if ((user.roles != null && 'admin' in user.roles) || user.username == 'admin') {
+            Counts.publish(this, 'complete-conferences-count', Conferences.find({
+                'user_id': {$ne:null},
+                end_timestamp: {
+                    $exists: true
+                }
+            }));
+        } else {
+            Counts.publish(this, 'complete-conferences-count', Conferences.find({
+                'user_id': this.userId,
+                end_timestamp: {
+                    $exists: true
+                }
+            }));
+        }
     } else {
         this.ready();
     }
@@ -252,23 +325,36 @@ Meteor.startup(function () {
     });
 
     Meteor.publish('ActiveConferences', function () {
+        console.log('ActiveConferences method')
         if (this.userId) {
-            return Conferences.find({
+            var user = Meteor.users.findOne({ '_id': this.userId })
+            console.log(user.username, user.roles)
+            if ((user.roles != null && 'admin' in user.roles) || user.username == 'admin') {
+                console.log('return admin conferences')
+                return Conferences.find({
+                    'user_id': {$ne:null},
+                    end_timestamp: {
+                        $exists: false
+                    }
+                }, {
+                    sort: {
+                        starmon_timestamp: -1
+                    }
+                });
+            }
+            console.log('return non-admin conferences')
+            const confs = Conferences.find({
+                'user_id': this.userId,
                 end_timestamp: {
                     $exists: false
                 }
             }, {
-                fields: {
-                    bridgeuniqueid: 1,
-                    conference: 1,
-                    memberTotal: 1,
-                    end_timestamp: 1,
-                    starmon_timestamp: 1
-                },
                 sort: {
                     starmon_timestamp: -1
                 }
             });
+            //console.log(confs)
+            return confs
         } else {
             this.ready();
         }
@@ -276,23 +362,32 @@ Meteor.startup(function () {
 
     Meteor.publish('CompleteConferences', function () {
         if (this.userId) {
-            return Conferences.find({
-                end_timestamp: {
-                    $exists: true
-                }
-            }, {
-                fields: {
-                    bridgeuniqueid: 1,
-                    conference: 1,
-                    memberTotal: 1,
-                    end_timestamp: 1,
-                    starmon_timestamp: 1
-                },
-                sort: {
-                    end_timestamp: -1
-                },
-                limit: 100
-            });
+            var user = Meteor.users.findOne({ '_id': this.userId })
+            if ((user.roles != null && 'admin' in user.roles) || user.username == 'admin') {
+                return Conferences.find({
+                    'user_id': {$ne:null},
+                    end_timestamp: {
+                        $exists: true
+                    }
+                }, {
+                    sort: {
+                        end_timestamp: -1
+                    },
+                    limit: 100
+                });
+            } else {
+                return Conferences.find({
+                    'user_id': this.userId,
+                    end_timestamp: {
+                        $exists: true
+                    }
+                }, {
+                    sort: {
+                        end_timestamp: -1
+                    },
+                    limit: 100
+                }); 
+            }
         } else {
             this.ready();
         }
@@ -300,9 +395,18 @@ Meteor.startup(function () {
 
     Meteor.publish('ConferenceSingle', function (id) {
         if (this.userId) {
-            return Conferences.find({
-                'bridgeuniqueid': id
-            });
+            var user = Meteor.users.findOne({ '_id': this.userId })
+            if ((user.roles != null && 'admin' in user.roles) || user.username == 'admin') {
+                return Conferences.find({
+                    'user_id': {$ne:null},
+                    'bridgeuniqueid': id
+                });
+            } else {
+                return Conferences.find({
+                    'user_id': this.userId,
+                    'bridgeuniqueid': id
+                });
+            }
         } else {
             this.ready();
         }
@@ -347,11 +451,11 @@ Meteor.startup(function () {
     Accounts.loginServiceConfiguration.remove({
         service: 'google'
     })
-    Accounts.loginServiceConfiguration.insert({
-        service: 'google',
-        clientId: GlobalSettings.Google.clientId,
-        secret: GlobalSettings.Google.secret
-    });
+    //Accounts.loginServiceConfiguration.insert({
+    //    service: 'google',
+    //    clientId: GlobalSettings.Google.clientId,
+    //    secret: GlobalSettings.Google.secret
+    //});
     Meteor.methods({
         'Directory-UpdateAllCID': function () {
             if (!Meteor.userId()) {
@@ -957,14 +1061,38 @@ Accounts.validateNewUser(function (user) {
 Accounts.onCreateUser(function (options, user) {
     if (Meteor.users.find().count() == 0) {
         user.roles = ['admin', 'user'];
+    } else {
+        try {
+            if (options.roles != null){
+                user.roles = options.roles
+            } else {
+                user.roles = ['user']
+            }
+        } catch (e) {
+            user.roles = ['user']
+        }
     }
     if (typeof user.services.google !== 'undefined') {
+        console.log('google services not undefined')
         user.emails = [{
             address: user.services.google.email
         }];
         user.profile = {};
         user.profile.name = user.services.google.name;
         user.username = emailUsername(user.services.google.email).toLowerCase();
+    } else {
+        console.log(options)
+        try {
+            user.profile = {
+                'name': options.profile.fullname,
+                'usernum': options.profile.usernum,
+                'domain': options.profile.domain,
+                'exten': options.profile.exten
+            }
+        } catch (e) {
+            user.profile = {}
+        }
+
     }
     return user;
 });
@@ -984,6 +1112,46 @@ function emailUsername(emailAddress) {
     return emailAddress.match(/^(.+)@/)[1];
 }
 let amiStarted = false;
+
+function checkDomain(usernum) {
+    console.log('checkDomain')
+    var current_user_id = Meteor.userId()
+    console.log(usernum)
+    if (current_user_id == null || current_user_id == undefined) {
+        return false
+    }
+    var current_user = Meteor.users.findOne({ '_id': current_user_id })
+    console.log(current_user.username)
+    try {
+        if (current_user.profile.usernum == usernum) {
+            console.log("domain correct")
+            return true
+        }
+    } catch (e) {
+        console.log(e)
+    }
+    return false
+}
+
+function getUserIdByExten(evt){
+    if (!'exten' in evt) {
+        console.log("NO EXTENSION IN EVENT")
+        return null
+    }
+    //console.log(evt.domain, evt.exten)
+    var exten = evt.exten
+    try {
+        var user_id = Meteor.users.findOne({ 'profile.exten': exten })._id
+    } catch (e) {
+        var user_id = null
+    }
+    if (user_id == null) {
+        //console.log("User with exten not found " + evt.event)
+        return false
+    }
+    //console.log("found user_id " + user_id)
+    return user_id
+}
 
 function StartAMI() {
     const amiserver = ServerSettings.find({
@@ -1009,7 +1177,11 @@ function StartAMI() {
 
             //AmiLog._ensureIndex( { 'starmon_timestamp': 1 }, { expireAfterSeconds: 60 } );
             ami.on('managerevent', Meteor.bindEnvironment(function (evt) {
-                console.log('managerevent', evt)
+                //console.log('managerevent', evt)
+                var user_id = getUserIdByExten(evt)
+                if (!user_id) {
+                    //return
+                }
                 evt.starmon_timestamp = Date.now();
                 if (evt.event == 'MeetmeTalking' || evt.event == 'ConfbridgeTalking' || evt.event == 'RTCPSent' || evt.event == 'RTCPReceived' || evt.event == 'VarSet') {
                     return;
@@ -1023,6 +1195,11 @@ function StartAMI() {
             //
             ami.on('join', Meteor.bindEnvironment(function (evt) {
                 console.log('join', evt)
+                var user_id = getUserIdByExten(evt)
+                if (!user_id) {
+                    //return
+                }
+                //evt.user_id
                 evt.starmon_timestamp = Date.now();
                 evt.calleridname = CIDLookup(evt.calleridname, evt.calleridnum);
                 Queue.insert(evt);
@@ -1030,6 +1207,10 @@ function StartAMI() {
 
             ami.on('leave', Meteor.bindEnvironment(function (evt) {
                 console.log('leave', evt)
+                user_id = getUserIdByExten(evt)
+                if (!user_id) {
+                    //return
+                }
                 Queue.remove({
                     uniqueid: evt.uniqueid
                 });
@@ -1037,6 +1218,10 @@ function StartAMI() {
 
             ami.on('confbridgetalking', Meteor.bindEnvironment(function (evt) {
                 console.log('confbridgetalking', evt)
+                var user_id = getUserIdByExten(evt)
+                if (!user_id) {
+                    //return
+                }
                 let talking = false;
                 let talkTime = 0;
                 if (evt.talkingstatus == 'on') {
@@ -1068,6 +1253,11 @@ function StartAMI() {
 
             ami.on('confbridgejoin', Meteor.bindEnvironment(function (evt) {
                 console.log('confbridgejoin', evt)
+                var user_id = getUserIdByExten(evt)
+                if (user_id == false) {
+                    console.log('return', user_id)
+                    return
+                }
                 evt.starmon_timestamp = Date.now();
                 evt.calleridname = CIDLookup(evt.calleridname, evt.calleridnum);
                 var muted = evt.muted
@@ -1076,91 +1266,132 @@ function StartAMI() {
                 } else {
                     evt.muted = true
                 }
+                var conf = Conferences.find({ 'bridgeuniqueid': evt.bridgeuniqueid })
+                if (conf.user_id == null) {
+                    console.log("Первый участник конференции, назначаем user_id конфы")
+                    Conferences.update({
+                        'bridgeuniqueid': evt.bridgeuniqueid
+                    }, {
+                        $set: {
+                            'user_id': user_id
+                        }
+                    });
+                }
                 // Update Conference Users Count
-                Conferences.update({
+                var updated = Conferences.update({
+                    'user_id': user_id,
                     'bridgeuniqueid': evt.bridgeuniqueid
                 }, {
                     $inc: {
                         memberTotal: 1
                     }
                 });
+                console.log('updated - ' + updated)
+                if (updated > 0) {
+                    console.log('add caller to members list')
+                    // Add caller to member list
+                    ConferenceMembers.insert(evt);
 
-                // Add caller to member list
-                ConferenceMembers.insert(evt);
-
-                // Push a message to the conference events
-                // TODO: Add administrator option to set local ("US", etc..)
-                const formatedPhone = libphonenumber.parsePhoneNumberFromString(evt.calleridnum, "US").formatNational();
-
-                const callerInfo = `${CIDLookup(evt.calleridname, evt.calleridnum)} ${formatedPhone}`.trim();
-                ConferenceEvents.insert({
-                    'message': `${callerInfo} joined the conference.`,
-                    'event': 'join',
-                    'starmon_timestamp': Date.now(),
-                    'bridgeuniqueid': evt.bridgeuniqueid
-                });
+                    // Push a message to the conference events
+                    // TODO: Add administrator option to set local ("US", etc..)
+                    try {
+                        var formatedPhone = libphonenumber.parsePhoneNumberFromString(evt.calleridnum, "US").formatNational();
+                    } catch (e) {
+                        var formatedPhone = evt.calleridnum
+                    }
+                    const callerInfo = `${CIDLookup(evt.calleridname, evt.calleridnum)} ${formatedPhone}`.trim();
+                    ConferenceEvents.insert({
+                        'message': `${callerInfo} joined the conference.`,
+                        'event': 'join',
+                        'starmon_timestamp': Date.now(),
+                        'bridgeuniqueid': evt.bridgeuniqueid
+                    });
+                } else {
+                    console.log('updated conferences = 0, error')
+                }
             }));
 
             ami.on('confbridgeleave', Meteor.bindEnvironment(function (evt) {
                 console.log('confbridgeleave', evt)
+                var user_id = getUserIdByExten(evt)
+                if (!user_id) {
+                    //return
+                }
+                evt.user_id
                 evt.starmon_timestamp = Date.now();
                 evt.calleridname = CIDLookup(evt.calleridname, evt.calleridnum);
                 // Update Conference Users Count
-                Conferences.update({
+                var updated = Conferences.update({
+                    //'user_id': user_id,
                     'bridgeuniqueid': evt.bridgeuniqueid
                 }, {
                     $inc: {
                         memberTotal: -1
                     }
                 });
+                console.log(updated)
+                if (updated > 0) {
+                    // Remove member from list
+                    ConferenceMembers.update({
+                        uniqueid: evt.uniqueid,
+                        leave_timestamp: {
+                            $exists: false
+                        }
+                    }, {
+                        $set: {
+                            leave_timestamp: Date.now(),
+                            talking: false,
+                        }
+                    });
 
-                // Remove member from list
-                ConferenceMembers.update({
-                    uniqueid: evt.uniqueid,
-                    leave_timestamp: {
-                        $exists: false
-                    }
-                }, {
-                    $set: {
-                        leave_timestamp: Date.now(),
-                        talking: false,
-                    }
-                });
-
-                // Post leave message to the conf
-                const callerInfo = `${CIDLookup(evt.calleridname, evt.calleridnum)} ${evt.calleridnum}`.trim();
-                ConferenceEvents.insert({
-                    'message': `${callerInfo} left the conference.`,
-                    'event': 'leave',
-                    'starmon_timestamp': Date.now(),
-                    'bridgeuniqueid': evt.bridgeuniqueid
-                });
+                    // Post leave message to the conf
+                    const callerInfo = `${CIDLookup(evt.calleridname, evt.calleridnum)} ${evt.calleridnum}`.trim();
+                    ConferenceEvents.insert({
+                        'user_id': user_id,
+                        'message': `${callerInfo} left the conference.`,
+                        'event': 'leave',
+                        'starmon_timestamp': Date.now(),
+                        'bridgeuniqueid': evt.bridgeuniqueid
+                    });
+                }
             }));
 
             ami.on('confbridgeend', Meteor.bindEnvironment(function (evt) {
                 console.log('confbridgeend', evt)
-                Conferences.update({
+                var user_id = getUserIdByExten(evt)
+                if (!user_id) {
+                    //return
+                }
+                var updated = Conferences.update({
+                    //'user_id': user_id,
                     'bridgeuniqueid': evt.bridgeuniqueid
                 }, {
                     $set: {
                         end_timestamp: new Date()
                     }
                 });
-                ConferenceEvents.insert({
-                    'message': `Conference has ended.`,
-                    'event': 'end',
-                    'starmon_timestamp': Date.now(),
-                    'bridgeuniqueid': evt.bridgeuniqueid
-                });
+                if (updated.nMatched > 0) {
+                    ConferenceEvents.insert({
+                        'message': `Conference has ended.`,
+                        'event': 'end',
+                        'starmon_timestamp': Date.now(),
+                        'bridgeuniqueid': evt.bridgeuniqueid,
+                        'user_id': user_id
+                    });
+                }
             }));
 
             ami.on('confbridgestart', Meteor.bindEnvironment(function (evt) {
                 console.log('confbridgestart', evt)
+                var user_id = getUserIdByExten(evt)
+                if (!user_id) {
+                    //return
+                }
                 evt.starmon_timestamp = Date.now();
-
                 evt.memberTotal = 0;
-                Conferences.insert(evt);
+                console.log(Conferences.insert(evt))
                 ConferenceEvents.insert({
+                    //'user_id': user_id,
                     'message': `Conference has begun.`,
                     'event': 'begin',
                     'starmon_timestamp': Date.now(),

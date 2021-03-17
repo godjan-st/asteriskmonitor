@@ -9,7 +9,7 @@
                     </div>
                 </div>
                 {{#if setupComplete}}
-                {{>atForm}}
+                {{>atForm state='signIn'}}
                 {{else}}
                 <p>Вам нужно <a href="{{pathFor 'setup'}}">настроить</a> <span class="fas fa-asterisk"></span>монитор перед тем как продолжить.</p>
                 {{/if}}
