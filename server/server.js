@@ -159,7 +159,6 @@ Meteor.publish('UserCount', function () {
 });
 
 Meteor.publish('ActiveConferencesCount', function () {
-    console.log('ActiveConferencesCount method')
     if (this.userId) {
         var user = Meteor.users.findOne({ '_id': this.userId })
         if ((user.roles != null && 'admin' in user.roles) || user.username == 'admin') {
@@ -325,7 +324,6 @@ Meteor.startup(function () {
     });
 
     Meteor.publish('ActiveConferences', function () {
-        console.log('ActiveConferences method')
         if (this.userId) {
             var user = Meteor.users.findOne({ '_id': this.userId })
             console.log(user.username, user.roles)
@@ -674,7 +672,7 @@ Meteor.startup(function () {
                             throw new Meteor.Error('conf-lock-error', err);
                         }
                         ConferenceEvents.insert({
-                            'message': `Conference is now locked.`,
+                            'message': `Конференция заблокирована.`,
                             'event': 'lock',
                             'starmon_timestamp': Date.now(),
                             'bridgeuniqueid': bridgeuniqueid
@@ -710,7 +708,7 @@ Meteor.startup(function () {
                             throw new Meteor.Error('conf-ulock-error', err);
                         }
                         ConferenceEvents.insert({
-                            'message': `Conference is now open.`,
+                            'message': `Конференция открыта.`,
                             'event': 'unlock',
                             'starmon_timestamp': Date.now(),
                             'bridgeuniqueid': bridgeuniqueid
@@ -761,7 +759,7 @@ Meteor.startup(function () {
                             }
                         });
                         ConferenceEvents.insert({
-                            'message': `${member.calleridname} ${member.calleridnum} is now muted.`,
+                            'message': `${member.calleridname} ${member.calleridnum} заглушен.`,
                             'event': 'mute',
                             'starmon_timestamp': Date.now(),
                             'bridgeuniqueid': bridgeuniqueid
@@ -812,7 +810,7 @@ Meteor.startup(function () {
                             }
                         });
                         ConferenceEvents.insert({
-                            'message': `${member.calleridname} ${member.calleridnum} is no longer muted.`,
+                            'message': `${member.calleridname} ${member.calleridnum} больше не заглушен.`,
                             'event': 'unmute',
                             'starmon_timestamp': Date.now(),
                             'bridgeuniqueid': bridgeuniqueid
@@ -854,7 +852,7 @@ Meteor.startup(function () {
                         }
 
                         ConferenceEvents.insert({
-                            'message': `${member.calleridname} ${member.calleridnum} has been kicked from the conference.`,
+                            'message': `${member.calleridname} ${member.calleridnum} был удален из конференции.`,
                             'event': 'kick',
                             'starmon_timestamp': Date.now(),
                             'bridgeuniqueid': bridgeuniqueid
@@ -871,8 +869,8 @@ Meteor.startup(function () {
             if (!Meteor.userId()) {
                 throw new Meteor.Error("not-authorized");
             }
-            bridge = parseInt(bridge)
-            check(bridge, Number);
+            //bridge = parseInt(bridge)
+            //check(bridge, Number);
             check(channel, String);
 
             var amiserver = ServerSettings.find({
@@ -887,6 +885,7 @@ Meteor.startup(function () {
                         amiserver.user,
                         amiserver.pass,
                         true);
+                    console.log('confbridgemute', bridge, channel)
                     ami.action({
                         'action': 'confbridgemute',
                         'conference': bridge,
@@ -915,9 +914,8 @@ Meteor.startup(function () {
             if (!Meteor.userId()) {
                 throw new Meteor.Error("not-authorized");
             }
-            console.log(bridge)
-            bridge = parseInt(bridge)
-            check(bridge, Number);
+            //bridge = parseInt(bridge)
+            //check(bridge, Number);
             check(channel, String);
 
             var amiserver = ServerSettings.find({
@@ -978,6 +976,7 @@ Meteor.startup(function () {
                         amiserver.user,
                         amiserver.pass,
                         true);
+                    console.log('confbridgekick', bridge, channel)
                     ami.action({
                         'action': 'confbridgekick',
                         'conference': bridge,
@@ -991,7 +990,7 @@ Meteor.startup(function () {
                             throw new Meteor.Error('conf-kick-error', err);
                         }
                         ConferenceEvents.insert({
-                            'message': `${member.calleridname} ${member.calleridnum} has been kicked from the conference.`,
+                            'message': `${member.calleridname} ${member.calleridnum} был удален из конференции.`,
                             'event': 'kick',
                             'starmon_timestamp': Date.now(),
                             'bridgeuniqueid': bridgeuniqueid
@@ -1051,7 +1050,7 @@ Meteor.methods({
 Accounts.validateNewUser(function (user) {
     const emailAddress = user.emails[0].address.toLowerCase();
     const idx = emailAddress.lastIndexOf('@');
-    if (idx > -1 && emailAddress.slice(idx) === '@' + GlobalSettings.LoginRestrictions.Domain) {
+    if (idx > -1) { // && emailAddress.slice(idx) === '@' + GlobalSettings.LoginRestrictions.Domain
         return true;
     } else {
         throw new Meteor.Error(403, 'Only domains from ' + GlobalSettings.LoginRestrictions.Domain + ' are allowed.');
@@ -1141,7 +1140,8 @@ function getUserIdByExten(evt){
     //console.log(evt.domain, evt.exten)
     var exten = evt.exten
     try {
-        var user_id = Meteor.users.findOne({ 'profile.exten': exten })._id
+        //var user_id = Meteor.users.findOne({ 'profile.exten': exten })._id
+        var user_id = Meteor.users.findOne({ '$where': 'function () { return (this.profile.exten != null && this.profile.exten.split(";").includes("'+exten+'")); }' })._id
     } catch (e) {
         var user_id = null
     }
@@ -1301,7 +1301,7 @@ function StartAMI() {
                     }
                     const callerInfo = `${CIDLookup(evt.calleridname, evt.calleridnum)} ${formatedPhone}`.trim();
                     ConferenceEvents.insert({
-                        'message': `${callerInfo} joined the conference.`,
+                        'message': `${callerInfo} зашел в конференцию.`,
                         'event': 'join',
                         'starmon_timestamp': Date.now(),
                         'bridgeuniqueid': evt.bridgeuniqueid
@@ -1348,7 +1348,7 @@ function StartAMI() {
                     const callerInfo = `${CIDLookup(evt.calleridname, evt.calleridnum)} ${evt.calleridnum}`.trim();
                     ConferenceEvents.insert({
                         'user_id': user_id,
-                        'message': `${callerInfo} left the conference.`,
+                        'message': `${callerInfo} покинул конференцию.`,
                         'event': 'leave',
                         'starmon_timestamp': Date.now(),
                         'bridgeuniqueid': evt.bridgeuniqueid
@@ -1372,7 +1372,7 @@ function StartAMI() {
                 });
                 if (updated.nMatched > 0) {
                     ConferenceEvents.insert({
-                        'message': `Conference has ended.`,
+                        'message': `Конференция окончена.`,
                         'event': 'end',
                         'starmon_timestamp': Date.now(),
                         'bridgeuniqueid': evt.bridgeuniqueid,
@@ -1392,7 +1392,7 @@ function StartAMI() {
                 console.log(Conferences.insert(evt))
                 ConferenceEvents.insert({
                     //'user_id': user_id,
-                    'message': `Conference has begun.`,
+                    'message': `Конференция началась.`,
                     'event': 'begin',
                     'starmon_timestamp': Date.now(),
                     'bridgeuniqueid': evt.bridgeuniqueid
@@ -1428,7 +1428,7 @@ function StartAMI() {
                     evt.conference = evt.meetme;
                     Conferences.insert(evt);
                     ConferenceEvents.insert({
-                        'message': `Conference has begun.`,
+                        'message': `Конференция началась.`,
                         'event': 'begin',
                         'starmon_timestamp': Date.now(),
                         'bridgeuniqueid': evt.bridgeuniqueid
@@ -1453,7 +1453,7 @@ function StartAMI() {
                 // Push a message to the conference events
                 const callerInfo = `${CIDLookup(evt.calleridname, evt.calleridnum)} ${evt.calleridnum}`.trim();
                 ConferenceEvents.insert({
-                    'message': `${callerInfo} joined the conference.`,
+                    'message': `${callerInfo} зашел в конференцию.`,
                     'event': 'join',
                     'starmon_timestamp': Date.now(),
                     'bridgeuniqueid': evt.bridgeuniqueid
@@ -1531,7 +1531,7 @@ function StartAMI() {
                     // Post leave message to the conf
                     const callerInfo = `${CIDLookup(evt.calleridname, evt.calleridnum)} ${evt.calleridnum}`.trim();
                     ConferenceEvents.insert({
-                        'message': `${callerInfo} left the conference.`,
+                        'message': `${callerInfo} покинул конференцию.`,
                         'event': 'leave',
                         'starmon_timestamp': Date.now(),
                         'bridgeuniqueid': conf.bridgeuniqueid
@@ -1556,7 +1556,7 @@ function StartAMI() {
                         }
                     });
                     ConferenceEvents.insert({
-                        'message': `Conference has ended.`,
+                        'message': `Конференция завершена.`,
                         'event': 'end',
                         'starmon_timestamp': Date.now(),
                         'bridgeuniqueid': conf.bridgeuniqueid
